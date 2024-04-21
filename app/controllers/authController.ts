@@ -3,7 +3,7 @@ import { NextFunction, Request, Response } from "express";
 import { DefaultResponse } from "../helpers/defaultResponseHelper";
 import { checkValidation } from "../helpers/validationHelper";
 import { hashPassword } from "../helpers/passwordHelper";
-import {authService} from '../services'
+import { authService } from '../services'
 // import config from "../../config";
 // import { CustomError } from "../models/customError";
 // import { RequestExtended } from "../interface/global";
@@ -16,19 +16,19 @@ class AuthController {
   async register(req: Request, res: Response, next: NextFunction) {
 
     try {
-        checkValidation(req)
+      checkValidation(req)
 
-      const {email}=  req.body
+      const { email } = req.body
 
-      const checkUserByEmail=await userRepository.getByEmail(email)
-      if(checkUserByEmail){
-        throw new CustomError(409,"User with this email already register")
+      const checkUserByEmail = await userRepository.getByEmail(email.toLowerCase())
+      if (checkUserByEmail) {
+        throw new CustomError(409, "User with this email already register")
       }
       // Hash the user's password
       const hashedPassword = await hashPassword(req?.body?.password);
 
       req.body.password = hashedPassword;
-const data={...req?.body,role:"ADMIN"}
+      const data = { ...req?.body, email: email.toLowerCase() }
       // Register the user
       const response = await userRepository.register(data);
 
@@ -46,8 +46,8 @@ const data={...req?.body,role:"ADMIN"}
 
 
   //Log in 
-   // Login User
-   async login(req: Request, res: Response, next: NextFunction) {
+  // Login User
+  async login(req: Request, res: Response, next: NextFunction) {
     try {
       // Check request validation
       checkValidation(req);
@@ -82,11 +82,11 @@ const data={...req?.body,role:"ADMIN"}
   async fetchProfile(req: RequestExtended, res: Response, next: NextFunction) {
 
     try {
-      const userDetails=await userRepository.getById(req?.user?.id)
-      if(!userDetails){
-        throw new CustomError(404,"Fail to fetch user profile")
+      const userDetails = await userRepository.getById(req?.user?.id)
+      if (!userDetails) {
+        throw new CustomError(404, "Fail to fetch user profile")
       }
-const {password,...rest}=userDetails
+      const { password, ...rest } = userDetails
       // Respond with a success message
       return DefaultResponse(
         res,
